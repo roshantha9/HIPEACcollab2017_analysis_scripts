@@ -1,0 +1,320 @@
+import sys
+import csv
+import pprint
+import matplotlib
+import numpy  as np
+from scipy import stats
+import collections
+matplotlib.use('Qt4Agg')
+import matplotlib.pyplot as plt
+plt.style.use('/home/rosh/Documents/EngD/Work/VidCodecWork/VideoProfilingData/analysis_tools/bmh_rosh.mplstyle')
+
+
+BASE_DATA_DIR = "/home/rosh/Documents/NTU_Work/HiPEAC_collab/DataCapture/SystemPerfStats/060317/"
+
+NUM_CPU_CORES=4
+
+
+target_metrics_order =        [
+                         
+                        # related to bus monitor - bandwidth
+                        "bw_mfc0", "bw_mfc1", 
+                        "bw_isp0", "bw_isp1",
+                        #"bw_gen", "bw_fsys",
+                        "bw_mem0_0", "bw_mem1_0",
+                        "bw_mem0_1", "bw_mem1_1",           
+                        "bw_disp1", 
+                        #"bw_total",
+                        
+                        # related to bus monitor - saturation
+                        "sat_mfc0", "sat_mfc1", 
+                        "sat_isp0", "sat_isp1",
+                        #"sat_gen", "sat_fsys",
+                        "sat_mem0_0", "sat_mem1_0",
+                        "sat_mem0_1", "sat_mem1_1",           
+                        "sat_disp1", 
+                        #"sat_total",
+
+                                                
+                        # related to cpu/gpu
+                        "cpu_util", "gpu_util",
+                        
+                        # related to frequencies
+                        "cpu_freq", "gpu_freq",
+                        "bus_mif_freq", "bus_int_freq"                      
+                        
+                        ]
+
+
+def load_csv(mem_fname, cpugpu_fname):
+    
+    all_metrics_data = {
+                        # related to bus monitor - bandwidth
+                        "bw_mfc0":[], "bw_mfc1":[], 
+                        "bw_isp0":[], "bw_isp1":[],
+                        "bw_gen":[], "bw_fsys":[],
+                        "bw_mem0_0":[], "bw_mem1_0":[],
+                        "bw_mem0_1":[], "bw_mem1_1":[],           
+                        "bw_disp1":[], 
+                        "bw_total":[],
+                        
+                        # related to bus monitor - saturation
+                        "sat_mfc0":[], "sat_mfc1":[], 
+                        "sat_isp0":[], "sat_isp1":[],
+                        "sat_gen":[], "sat_fsys":[],
+                        "sat_mem0_0":[], "sat_mem1_0":[],
+                        "sat_mem0_1":[], "sat_mem1_1":[],           
+                        "sat_disp1":[], 
+                        "sat_total":[],
+
+                                                
+                        # related to cpu/gpu
+                        "core0_util":[],"core1_util":[],
+                        "core2_util":[],"core3_util":[],                        
+                        "cpu_util":[], "gpu_util":[],
+                        
+                        # related to frequencies
+                        "cpu_freq":[], "gpu_freq":[],
+                        "bus_mif_freq":[], "bus_int_freq":[]
+                   }
+    
+    # get memory related stats
+    with open(mem_fname, 'rb') as f:
+        reader = csv.reader(f, delimiter=',')        
+        for row in reader:
+            sampleCount = row[0]
+            #print sampleCount    
+            
+            # bw, freq, sat, duration                    
+            all_metrics_data["bw_mfc0"].append(float(row[1]))
+            all_metrics_data["bw_mfc1"].append(float(row[5]))
+            all_metrics_data["bw_isp0"].append(float(row[9]))
+            all_metrics_data["bw_isp1"].append(float(row[13]))
+            all_metrics_data["bw_gen"].append(float(row[17]))
+            all_metrics_data["bw_fsys"].append(float(row[21]))
+            all_metrics_data["bw_mem0_0"].append(float(row[25]))
+            all_metrics_data["bw_mem1_0"].append(float(row[29]))
+            all_metrics_data["bw_mem0_1"].append(float(row[33]))
+            all_metrics_data["bw_mem1_1"].append(float(row[37]))
+            all_metrics_data["bw_disp1"].append(float(row[41]))
+            
+            all_metrics_data["sat_mfc0"].append(float(row[3]))
+            all_metrics_data["sat_mfc1"].append(float(row[7]))
+            all_metrics_data["sat_isp0"].append(float(row[11]))
+            all_metrics_data["sat_isp1"].append(float(row[15]))
+            all_metrics_data["sat_gen"].append(float(row[19]))
+            all_metrics_data["sat_fsys"].append(float(row[23]))
+            all_metrics_data["sat_mem0_0"].append(float(row[27]))
+            all_metrics_data["sat_mem1_0"].append(float(row[31]))
+            all_metrics_data["sat_mem0_1"].append(float(row[35]))
+            all_metrics_data["sat_mem1_1"].append(float(row[39]))
+            all_metrics_data["sat_disp1"].append(float(row[43]))
+            
+            
+            # mif, int freqs
+            #if MIF_FREQ=="default" and INT_FREQ=="default":
+            if len(row)>44:
+                all_metrics_data["bus_mif_freq"].append(int(row[45]))
+                all_metrics_data["bus_int_freq"].append(int(row[46]))
+            
+    # cpu gpu util and freqs
+    core_data = {                      
+            cid: {
+                      "busy":[],
+                      "nicebusy":[],
+                      "idle":[],
+                      "util":[], 
+                      "util_freq":[],
+                      "util_freq_norm" : [], # normalised 'util_freq'
+                      } for cid in xrange(NUM_CPU_CORES)
+                 }            
+            
+    with open(cpugpu_fname, 'rb') as f:
+        reader = csv.reader(f, delimiter=',')                
+        for row in reader:
+            sampleCount = row[0]
+            #count, freq, {busy, nicebusy, idle} - per CPU, gpufreq, gpuutil            
+            # bw, freq, sat, duration                    
+            all_metrics_data["cpu_freq"].append(float(row[1]))
+  
+            cid=0
+            core_data[cid]["busy"].append(float(row[2]))
+            core_data[cid]["nicebusy"].append(float(row[3]))
+            core_data[cid]["idle"].append(float(row[4]))
+            
+            cid=1
+            core_data[cid]["busy"].append(float(row[5]))
+            core_data[cid]["nicebusy"].append(float(row[6]))
+            core_data[cid]["idle"].append(float(row[7]))
+            
+            cid=2
+            core_data[cid]["busy"].append(float(row[8]))
+            core_data[cid]["nicebusy"].append(float(row[9]))
+            core_data[cid]["idle"].append(float(row[10]))
+                
+            cid=3
+            core_data[cid]["busy"].append(float(row[11]))
+            core_data[cid]["nicebusy"].append(float(row[12]))
+            core_data[cid]["idle"].append(float(row[13]))
+                
+            # gpu stuff
+            all_metrics_data['gpu_freq'].append(float(row[14])) # in MHz
+            all_metrics_data['gpu_util'].append((float(row[15])/256.0)*100.0)        
+    
+    # convert low-level core stats into proper metrics
+    core_data = calc_and_update_cpu_util(core_data, all_metrics_data["cpu_freq"])
+    
+    all_metrics_data["core0_util"] = core_data[0]['util']
+    all_metrics_data["core1_util"] = core_data[1]['util']
+    all_metrics_data["core2_util"] = core_data[2]['util']
+    all_metrics_data["core3_util"] = core_data[3]['util']
+    
+    # calculate total (overall) util
+    overall_util = np.array([0.0]*len(core_data[0]["util"]))
+    overall_util_freq = np.array([0.0]*len(core_data[0]["util_freq_norm"]))
+    for cid in xrange(NUM_CPU_CORES):        
+        overall_util += core_data[cid]["util"]
+        overall_util_freq += core_data[cid]["util_freq_norm"]
+    
+    all_metrics_data["cpu_util"] = overall_util/float(NUM_CPU_CORES)
+    all_metrics_data["cpu_util_freq"] = overall_util_freq/float(NUM_CPU_CORES)
+    
+    
+    
+    return len(all_metrics_data["cpu_freq"]), all_metrics_data
+    
+    
+####################
+# Data manipulation
+####################
+def calc_and_update_cpu_util(data, cpufreq):    
+    # calculate core specific util
+    for cid in xrange(NUM_CPU_CORES):        
+        zeropad = np.array([0.0])
+        
+        # calculate core specific util
+        cbusy = np.array(data[cid]["busy"])
+        cnicebusy = np.array(data[cid]["nicebusy"])
+        cidle = np.array(data[cid]["idle"])
+        
+        cbusysub = np.diff(cbusy)
+        cbusysub = np.concatenate([zeropad, cbusysub])
+        
+        cnicebusysub = np.diff(cnicebusy)
+        cnicebusysub = np.concatenate([zeropad, cnicebusysub])
+        
+        cidlesub = np.diff(cidle)
+        cidlesub = np.concatenate([zeropad, cidlesub])
+        
+        cidlesub_plus_busysub = cbusysub + cidlesub
+        
+        ratio = np.nan_to_num((cbusysub / cidlesub_plus_busysub))
+        
+        cutil = ratio * 100.0
+     
+        cutil_freq = ratio * np.array(cpufreq)
+                
+        data[cid]["util"] = cutil
+        data[cid]["util_freq"] = cutil_freq
+    
+    # calculate normlised CPU core util
+    # find global min/max     
+    all_min = 0
+    all_max = 0
+    for cid in xrange(NUM_CPU_CORES):
+        cmax = np.max(data[cid]["util_freq"])
+        if cmax > all_max:
+            all_max = cmax
+        else:
+            pass
+    
+    for cid in xrange(NUM_CPU_CORES):        
+        normed_util_freq = _normalise_list(data[cid]["util_freq"], 
+                                           norm_min=all_min, norm_max=all_max)
+        data[cid]["util_freq_norm"] = np.array(normed_util_freq)*100.0
+    
+    return data
+    
+
+
+def _normalise_list(lst, norm_min=None, norm_max=None):    
+    if norm_max == None:
+        norm_max = np.max(lst)    
+    if norm_min == None:
+        norm_min = np.min(lst)    
+    new_list = []
+    for each_l in lst:   
+        x = each_l     
+        norm_val = (x-norm_min)/(norm_max-norm_min)
+        new_list.append(norm_val)
+    return new_list
+
+
+
+    
+####################
+# Stats calc
+####################
+def compute_correlation_matrix(dataset, metrics):     
+    corr_matrix = collections.OrderedDict()
+    corr_mat_2d_lst = np.empty([len(metrics), len(metrics)])
+    for ix_i, each_metric_i in enumerate(metrics):
+        corr_matrix[each_metric_i]={}
+        #corr_mat_2d_lst[ix_i]=[None]*len(metrics)
+        for ix_j, each_metric_j in enumerate(metrics):
+            x = dataset[each_metric_i]
+            y = dataset[each_metric_j]
+            #print each_metric_i, each_metric_j,
+            #print len(x), len(y)
+            pr = stats.pearsonr(x, y)
+            #print pr
+            corr_matrix[each_metric_i][each_metric_j] = pr[0] if np.isnan(pr[0])==False else 0.0
+            corr_mat_2d_lst[ix_i][ix_j] = pr[0] if np.isnan(pr[0])==False else 0.0
+    
+    return corr_matrix, corr_mat_2d_lst
+
+
+####################
+# Plotting
+####################
+def plot_corr_matrix(data):
+    #fig = plt.figure(figsize=(6*1.2, 6*1.2))
+    fig, ax = plt.subplots()
+    fig.canvas.set_window_title('plot_corr_matrix')
+    plt.pcolormesh(data, cmap='RdBu', vmin=-1.0, vmax=1.0, edgecolor='black', linestyle=':', lw=1.0)
+    plt.colorbar()
+    
+    ticks = np.arange(0.5,len(target_metrics_order))
+    labels = target_metrics_order
+    plt.xticks(ticks, labels, rotation=90)
+    plt.yticks(ticks, labels)
+    
+    #for axis in [ax.xaxis, ax.yaxis]:
+    #    axis.set(ticks=np.arange(0.5, len(labels)), ticklabels=labels)
+
+
+#################
+#    MAIN code
+#################
+SCENARIO_ID = "chrome0" 
+DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
+MIF_FREQ = "default"
+INT_FREQ = "default"
+#MIF_FREQ = 400000
+#INT_FREQ = 50000
+
+cpugpu_csv_fname = DATA_DIR + "data_cpugpu-{0}-{1}.csv".format(MIF_FREQ, INT_FREQ)
+mem_csv_fname = DATA_DIR + "data_mem-{0}-{1}.csv".format(MIF_FREQ, INT_FREQ)
+
+(count, perfdata) = load_csv(mem_csv_fname, cpugpu_csv_fname)
+
+lbl = "{0}:mif-{1}:int-{2}".format(SCENARIO_ID, MIF_FREQ, INT_FREQ)
+
+corr_matrix = compute_correlation_matrix(perfdata, target_metrics_order)[1]
+
+pprint.pprint(corr_matrix)
+
+plot_corr_matrix(corr_matrix)
+
+plt.show()
+print "-- Finished --"

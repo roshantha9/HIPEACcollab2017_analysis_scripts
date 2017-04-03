@@ -10,18 +10,19 @@ matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
 plt.style.use('/home/rosh/Documents/EngD/Work/VidCodecWork/VideoProfilingData/analysis_tools/bmh_rosh.mplstyle')
 
-from common import target_metrics_order,reduced_target_metrics_order, \
-                    reduced_metrics_onlyfreqs_order,reduced_target_metrics_order_2, \
+from common import target_metrics_order,reduced_target_metrics_order, reduced_metrics_onlyfreqs_order_2, \
+                    reduced_metrics_onlyfreqs_order,reduced_target_metrics_order_2, reduced_target_metrics_order_nogpu, \
                      load_csv, calc_and_update_cpu_util, _normalise_list, \
-                     scenario_list, rename_metrics,\
+                     scenario_list, roylongbottom_microbench_list,\
+                     rename_metrics,\
                      CPU_FREQS_KHZ, GPU_FREQS_MHZ
 
 
 BASE_DATA_DIR = "/home/rosh/Documents/NTU_Work/HiPEAC_collab/DataCapture/SystemPerfStats/060317/"
 
 NUM_CPU_CORES = 4
-SAMPLING_PERIOD = 200
-
+#SAMPLING_PERIOD = 200
+SAMPLING_PERIOD = 50
 
     
     
@@ -29,7 +30,16 @@ SAMPLING_PERIOD = 200
 # Data manipulation
 ####################
 
-
+def _crop_pefdata(perfdata, cstart, cend):
+    crop_perfdata = {}    
+    for each_k, each_v in perfdata.iteritems():
+        crop_perfdata[each_k] = each_v[cstart:cend]
+    
+    return crop_perfdata
+        
+        
+        
+        
 
     
 ####################
@@ -46,10 +56,10 @@ def compute_correlation_matrix(dataset, metrics):
         for ix_j, each_metric_j in enumerate(metrics):
             x = dataset[each_metric_i]
             y = dataset[each_metric_j]
-            #print each_metric_i, each_metric_j,
-            #print len(x), len(y)
-            pr = stats.pearsonr(x, y)
-            #print pr
+            
+            #pr = stats.pearsonr(x, y)
+            pr = stats.spearmanr(x, y)
+            
             corr_matrix[each_metric_i][each_metric_j] = pr[0] if np.isnan(pr[0])==False else 0.0
             corr_mat_2d_lst[ix_i][ix_j] = pr[0] if np.isnan(pr[0])==False else 0.0
             
@@ -124,8 +134,8 @@ def plot_cpugpumem_dist_all_scenarios(sc_list, mif_freq, int_freq):
              '#006d2c', '#74c476', # greens
              ]
     
-    
-    fig, axs = plt.subplots(5,3, figsize=(12*1.2, 10*1.2), sharex=True)    
+    nrows = 3
+    fig, axs = plt.subplots(nrows,int(np.ceil(len(sc_list)/float(nrows))), figsize=(12*1.2, 10*1.2), sharex=True)    
     axs = axs.ravel()
 
     for ix, each_scenario in enumerate(sc_list):
@@ -283,10 +293,10 @@ def _corr_met_ignore_list(m):
 #################
 SCENARIO_ID = "rlbench_mprndmemi" 
 DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
-MIF_FREQ = "default"
-INT_FREQ = "default"
-#MIF_FREQ = 400000
-#INT_FREQ = 50000
+MIF_FREQ = "test3"
+INT_FREQ = "test3"
+#MIF_FREQ = 800000
+#INT_FREQ = 800000
 
 cpugpu_csv_fname = DATA_DIR + "data_cpugpu-{0}-{1}.csv".format(MIF_FREQ, INT_FREQ)
 mem_csv_fname = DATA_DIR + "data_mem-{0}-{1}.csv".format(MIF_FREQ, INT_FREQ)
@@ -296,22 +306,25 @@ mem_csv_fname = DATA_DIR + "data_mem-{0}-{1}.csv".format(MIF_FREQ, INT_FREQ)
 # plot_cross_correlation(perfdata['bus_mif_freq'],
 #                        perfdata['cpu_util_freq'])
 
+# temp crop data
+#perfdata = _crop_pefdata(perfdata, 586, -1)
+
 
 lbl = "{0}:mif-{1}:int-{2}".format(SCENARIO_ID, MIF_FREQ, INT_FREQ)
 
-#corr_matrix = compute_correlation_matrix(perfdata, reduced_target_metrics_order_2)[1]
-#plot_corr_matrix(corr_matrix, reduced_target_metrics_order_2, SCENARIO_ID)
+#corr_matrix = compute_correlation_matrix(perfdata, reduced_target_metrics_order_nogpu)[1]
+#plot_corr_matrix(corr_matrix, reduced_target_metrics_order_nogpu, SCENARIO_ID)
 
-plot_overlapped(perfdata, ['cpu_freq', 'gpu_freq',
+plot_overlapped(perfdata, ['cpu_freq', 
                            'bus_mif_freq', 'bus_int_freq', 
-                           'cpu_util', 'cpu_cost', 'gpu_util', 'gpu_cost',
+                           'cpu_util', 'cpu_cost', 
                            'sat_total', 'sat_cost'], 
                 SCENARIO_ID)
 
-#all_sc_corrs = compute_corrmatrix_all_scenarios(scenario_list, reduced_target_metrics_order)
+#all_sc_corrs = compute_corrmatrix_all_scenarios(scenario_list, reduced_metrics_onlyfreqs_order_2)
 #plot_corr_across_scenarios(all_sc_corrs)
    
-#plot_cpugpumem_dist_all_scenarios(scenario_list, "default", "default")
+#plot_cpugpumem_dist_all_scenarios(roylongbottom_microbench_list, "default", "default")
 
 plt.show()
 print "-- Finished --"

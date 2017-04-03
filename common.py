@@ -54,8 +54,25 @@ scenario_list =[
                 
                 # browsing
                 "game0",
+                
+                # testing
+                'rlbench_mprndmemi'
             ]
 
+
+microbench_list = [                   
+                   'spec_bzip2', 'spec_gobmk',
+                   'spec_hmmer', 'spec_mcf',
+                   'spec_sjeng',
+                   ]
+
+
+roylongbottom_microbench_list = [
+                                 'rlbench_mprndmemi',
+                                 'rlbench_mpbusspd2',
+                                 'rlbench_mpdhryi',
+                                 'rlbench_mpmflops2i',                                 
+                                 ]
 
 
 scenario_list_fps = [
@@ -124,6 +141,19 @@ reduced_target_metrics_order =[
                                "bus_mif_freq", "bus_int_freq",
                                ]
 
+reduced_target_metrics_order_nogpu =[                               
+                               "sat_total",
+                               "sat_cost",
+                               
+                               # related to cpu/gpu
+                               "cpu_util", 
+                               "cpu_cost", 
+                        
+                               # related to frequencies
+                               "cpu_freq", 
+                               "bus_mif_freq", "bus_int_freq",
+                               ]
+
 reduced_target_metrics_order_2 =[                               
                                "sat_cost",
                                
@@ -136,8 +166,7 @@ reduced_target_metrics_order_2 =[
                                "bus_mif_freq", "bus_int_freq",
                                ]
 
-reduced_metrics_onlyfreqs_order =[                               
-                               
+reduced_metrics_onlyfreqs_order =[  
                                # related to frequencies
                                "cpu_freq", "gpu_freq",
                                "bus_mif_freq", "bus_int_freq",
@@ -145,6 +174,14 @@ reduced_metrics_onlyfreqs_order =[
                                "sat_total", "sat_cost"
                                ] 
 
+reduced_metrics_onlyfreqs_order_2 = [  
+                               # related to frequencies
+                               "cpu_freq", "gpu_freq",
+                               "bus_mif_freq", "bus_int_freq",
+                               ]
+
+
+ 
 
 def rename_metrics(met_name):
     new_met_name = met_name

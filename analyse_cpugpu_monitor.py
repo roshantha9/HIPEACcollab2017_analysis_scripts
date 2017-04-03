@@ -15,7 +15,7 @@ BASE_DATA_DIR = "/home/rosh/Documents/NTU_Work/HiPEAC_collab/DataCapture/SystemP
 
 
 
-SAMPLING_PERIOD = 200
+SAMPLING_PERIOD = 50
 NUM_CPU_CORES = 4
 
 default_metric_order = [
@@ -215,7 +215,7 @@ def calc_and_update_cpu_util(data):
 ####################
 # Plotting related
 ####################
-PLOT_UTIL_PER_CORE = False
+PLOT_UTIL_PER_CORE = True
 def plot_util_data(perfdata, fname, lbl):    
     fig = plt.figure(figsize=(8*1.2, 4*1.2))
     fig.canvas.set_window_title(fname)
@@ -320,7 +320,7 @@ def plot_freq_data(perfdata, fname, lbl):
 #    MAIN code
 #################
 
-SCENARIO_ID = "game0" 
+SCENARIO_ID = "llrand" 
 DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
 MIF_FREQ = "default"
 INT_FREQ = "default"

@@ -54,7 +54,7 @@ MET_ID_FREQ  = 1
 MET_ID_SAT   = 2
 MET_ID_DUR   = 3
 
-SAMPLING_PERIOD = 200
+SAMPLING_PERIOD = 50
 
 
 def _check_row_extraction(data):
@@ -261,7 +261,7 @@ def plot_mem_freq_data(perfdata, lbl, fname, units):
 #    MAIN code
 #################
 
-SCENARIO_ID = "game0" 
+SCENARIO_ID = "llrand" 
 DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
 MIF_FREQ = "default"
 INT_FREQ = "default"
@@ -277,8 +277,8 @@ fname="plot_bus-{0}-".format(lbl)
 
 
 plot_bus_data(perfdata, MET_ID_SAT, lbl, fname+"Saturation", "Bus saturation %")
-plot_bus_data(perfdata, MET_ID_BW, lbl, fname+"Bandwidth", "Bus bandwidth (MBps)")
-plot_bus_data(perfdata, MET_ID_FREQ,lbl, fname+"Bus Calculated Frequency", "Frequency (MHz)" )
+#plot_bus_data(perfdata, MET_ID_BW, lbl, fname+"Bandwidth", "Bus bandwidth (MBps)")
+#plot_bus_data(perfdata, MET_ID_FREQ,lbl, fname+"Bus Calculated Frequency", "Frequency (MHz)" )
 
 if MIF_FREQ=="default" and INT_FREQ=="default":
     plot_mem_freq_data(perfdata, lbl, fname, "Frequency (MHz)")

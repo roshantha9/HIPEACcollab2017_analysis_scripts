@@ -8,7 +8,15 @@ import matplotlib.pyplot as plt
 plt.style.use('/home/rosh/Documents/EngD/Work/VidCodecWork/VideoProfilingData/analysis_tools/bmh_rosh.mplstyle')
 
 
+from common import scenario_list, roylongbottom_microbench_list, mif_int_freqstr_to_tuple
+
+                    
+from cropping_params_power import CUSTOM_CROPPING_PARAMS_ALL
+
 BASE_DATA_DIR = "/home/rosh/Documents/NTU_Work/HiPEAC_collab/DataCapture/SystemPerfStats/060317/"
+
+FIG_OUTPUT_DIR_BUSSTATS = "/home/rosh/Documents/NTU_Work/HiPEAC_collab/plots/DetailedPlots/bus_stats/"
+FIG_OUTPUT_DIR_BUSFREQ = "/home/rosh/Documents/NTU_Work/HiPEAC_collab/plots/DetailedPlots/bus_freq/"
 
 
 default_bwmon_metric_order = ["mfc0", "mfc1", 
@@ -54,7 +62,7 @@ MET_ID_FREQ  = 1
 MET_ID_SAT   = 2
 MET_ID_DUR   = 3
 
-SAMPLING_PERIOD = 50
+SAMPLING_PERIOD = 200
 
 
 def _check_row_extraction(data):
@@ -68,7 +76,7 @@ def _check_row_extraction(data):
         else:
             pass
 
-def load_csv(fname):
+def load_csv(fname, miffreq, intfreq):
     
     data = {            
             "mfc0" : [],
@@ -108,7 +116,7 @@ def load_csv(fname):
             data["disp1"].append(row[41:45])
             
             # mif, int freqs
-            if MIF_FREQ=="default" and INT_FREQ=="default":
+            if miffreq=="default" and intfreq=="default":                              
                 data["mif_freq"].append(int(row[45]))
                 data["int_freq"].append(int(row[46]))
                         
@@ -141,7 +149,8 @@ def get_mem_data_by_metric(metric_id):
 ####################
 # Plotting related
 ####################
-def plot_bus_data(perfdata, met_id, lbl, fname, units):    
+def plot_bus_data(perfdata, met_id, lbl, fname, units, save_fig=False):    
+    print fname
     fig = plt.figure(figsize=(6*1.2, 3.5*1.2))
     ax = fig.add_subplot(111)
     fig.canvas.set_window_title(fname)
@@ -159,7 +168,7 @@ def plot_bus_data(perfdata, met_id, lbl, fname, units):
             all_max = np.max(filtered_data[each_metric])
             
         plt.plot(x_data, filtered_data[each_metric], color=default_colours[each_metric], 
-                 marker=default_markers[each_metric], label=each_metric)
+                 marker=default_markers[each_metric], label=_rename_lbl(each_metric))
         plt.hold(True)
         total_data.append(filtered_data[each_metric])
     
@@ -168,36 +177,24 @@ def plot_bus_data(perfdata, met_id, lbl, fname, units):
         sum_data_per_point = np.sum(total_data, axis=0)
         plt.plot(x_data, sum_data_per_point, color='k', 
                  marker='x', label='Total', lw=1.0)
-    
-    
-    
-        # testing
-#         print "--"
-#         for ix, each_metric in enumerate(default_bwmon_metric_order):
-#             print each_metric, filtered_data[each_metric][100:105]
-#         print sum_data_per_point[100:105]
-#         print "--"
-#         pprint.pprint(sum_data_per_point)  
-    
-    
-    l = plt.legend(ncol=6, fontsize=11, 
+
+    l = plt.legend(ncol=6, fontsize=11, frameon=False,
                    labelspacing=0, handletextpad=0.2, loc='upper center',
                    bbox_to_anchor=(0.5, 1.24))
     l.draggable()
     l.get_frame().set_facecolor('#FFFFFF')
     
     #plt.title(lbl)
-    plt.xlabel("time (s)")
-    plt.ylabel(units)
+    plt.xlabel("time (s)", fontsize=12)
+    plt.ylabel(units, fontsize=12)
     plt.xlim(0.0, x_data[-1]+0.05)
     
-    font = {'family': 'serif',        
+    font = {      
         'weight': 'normal',
-        'size': 11,
+        'size': 12,
         }
     
     plt.title(lbl, fontdict=font)
-
     
     if(len(str(int(all_max)))>3): # xtick too large, pushes label out
         plt.subplots_adjust(top=0.85, left=0.115, right=0.98, bottom=0.13)
@@ -205,8 +202,13 @@ def plot_bus_data(perfdata, met_id, lbl, fname, units):
         plt.subplots_adjust(top=0.85, left=0.09, right=0.98, bottom=0.13)
     
     
+    if save_fig == True:
+        fig.savefig(FIG_OUTPUT_DIR_BUSSTATS + fname + ".png")
+        fig.savefig(FIG_OUTPUT_DIR_BUSSTATS + fname + ".pdf")
+    
 # this is the frequency as set via devfreq
-def plot_mem_freq_data(perfdata, lbl, fname, units):    
+def plot_mem_freq_data(perfdata, lbl, fname, units, save_fig=False):    
+    print fname
     fig = plt.figure(figsize=(6*1.2, 3.5*1.2))
     ax = fig.add_subplot(111)
     fig.canvas.set_window_title(fname)
@@ -254,6 +256,20 @@ def plot_mem_freq_data(perfdata, lbl, fname, units):
         plt.subplots_adjust(top=0.85, left=0.115, right=0.98, bottom=0.13)
     else:
         plt.subplots_adjust(top=0.85, left=0.09, right=0.98, bottom=0.13)
+    
+    if save_fig == True:
+        fig.savefig(FIG_OUTPUT_DIR_BUSFREQ + fname + ".png")
+        fig.savefig(FIG_OUTPUT_DIR_BUSFREQ + fname + ".pdf")
+
+ 
+def _rename_lbl(m):     
+    if m == "mem0_0" : result = "gfx-mem0"
+    elif m == "mem1_0" : result = "gfx-mem1"    
+    elif m == "mem0_1" : result = "cpu-mem0"
+    elif m == "mem1_1" : result = "cpu-mem1"    
+    else : result = m
+    
+    return result
 
 
 
@@ -261,29 +277,39 @@ def plot_mem_freq_data(perfdata, lbl, fname, units):
 #    MAIN code
 #################
 
-SCENARIO_ID = "llrand" 
-DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
-MIF_FREQ = "default"
-INT_FREQ = "default"
-#MIF_FREQ = 100000
-#INT_FREQ = 50000
+all_sc_list = scenario_list + roylongbottom_microbench_list
+all_freq_list = CUSTOM_CROPPING_PARAMS_ALL
 
-csv_fname = DATA_DIR + "data_mem-{0}-{1}.csv".format(MIF_FREQ, INT_FREQ)
+for each_sc in all_sc_list:
+    
+    SCENARIO_ID = each_sc 
+    DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
+    
+    for each_mifint_freq in all_freq_list[each_sc]:
+        
+        [MIF_FREQ, INT_FREQ] = mif_int_freqstr_to_tuple(each_mifint_freq)
+        
+        lbl = "{0}--MIF-{1}:INT-{2}".format(SCENARIO_ID, MIF_FREQ, INT_FREQ)
+        fname="plot_bus-{0}-".format(lbl)
+        
+        csv_fname = DATA_DIR + "data_mem-{0}-{1}.csv".format(MIF_FREQ, INT_FREQ)
+        
+        (count, perfdata) = load_csv(csv_fname, MIF_FREQ, INT_FREQ)
+        
+        plot_bus_data(perfdata, MET_ID_SAT, lbl, fname+"Saturation", "Bus saturation %", save_fig=True)
+        plot_bus_data(perfdata, MET_ID_BW, lbl, fname+"Bandwidth", "Bus bandwidth (MBps)", save_fig=True)
+        plot_bus_data(perfdata, MET_ID_FREQ,lbl, fname+"BusCalcFreq", "Frequency (MHz)" , save_fig=True)
+        
+        if MIF_FREQ=="default" and INT_FREQ=="default":
+            plot_mem_freq_data(perfdata, lbl, fname+"MIFINTFreq", "Frequency (MHz)", save_fig=True)
+        elif ("test" in MIF_FREQ) and ("test" in INT_FREQ):
+            plot_mem_freq_data(perfdata, lbl, fname+"MIFINTFreq", "Frequency (MHz)", save_fig=True)
+        else:
+            pass
+        
+        #sys.exit()
 
-(count, perfdata) = load_csv(csv_fname)
-
-lbl = "{0}:mif-{1}:int-{2}".format(SCENARIO_ID, MIF_FREQ, INT_FREQ)
-fname="plot_bus-{0}-".format(lbl)
-
-
-plot_bus_data(perfdata, MET_ID_SAT, lbl, fname+"Saturation", "Bus saturation %")
-#plot_bus_data(perfdata, MET_ID_BW, lbl, fname+"Bandwidth", "Bus bandwidth (MBps)")
-#plot_bus_data(perfdata, MET_ID_FREQ,lbl, fname+"Bus Calculated Frequency", "Frequency (MHz)" )
-
-if MIF_FREQ=="default" and INT_FREQ=="default":
-    plot_mem_freq_data(perfdata, lbl, fname, "Frequency (MHz)")
-
-plt.show()
+#plt.show()
 
 print "-- Finished --"
 

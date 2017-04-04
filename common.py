@@ -1,6 +1,6 @@
 import csv
 import numpy as np
-from cropping_params_power import CUSTOM_CROPPING_PARAMS_ALL
+#from cropping_params_power import CUSTOM_CROPPING_PARAMS_ALL
 
 
 CPU_FREQS_KHZ = [1600000,1500000,1400000,1300000,1200000,1100000,1000000,900000,800000,600000,550000,500000,450000,400000,350000,300000,250000] 
@@ -54,9 +54,7 @@ scenario_list =[
                 
                 # browsing
                 "game0",
-                
-                # testing
-                'rlbench_mprndmemi'
+                   
             ]
 
 
@@ -455,4 +453,10 @@ def _normalise_list(lst, norm_min=None, norm_max=None):
         norm_val = (x-norm_min)/(norm_max-norm_min)
         new_list.append(norm_val)
     return new_list
+
+
+def mif_int_freqstr_to_tuple(s):
+    [mifstr, intstr] =  s.split("-")    
+    return [mifstr, intstr]
+
 

@@ -76,7 +76,7 @@ def find_between( s, first, last ):
     
     
 
-def load_log(fname):            
+def load_log_music0(fname):            
     data = {
             'last_write':[],
             'bl_writes':[],
@@ -123,25 +123,26 @@ def _time_convert(m_s):
 ##########
 # MAIN
 ##########
-SCENARIO_ID = 'music0'
-DEVFREQ_MIFINT_PAIRS = [k.split("-") for k in CUSTOM_CROPPING_PARAMS_ALL[SCENARIO_ID].keys()]
-DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
-
-data_list = {} # raw    
-freq_str_list = []
-for (mif_freq, int_freq) in DEVFREQ_MIFINT_PAIRS:
-    freq_str = '{0}-{1}'.format(mif_freq, int_freq)
-    req_str = '{0}-{1}'.format(mif_freq, int_freq)
-    freq_str_list.append(freq_str)        
-    data_fname = DATA_DIR + "data_audio-{0}-{1}.txt".format(mif_freq, int_freq)
-     
-    data_list[freq_str] = load_log(data_fname)
+if __name__ == "__main__":
+    SCENARIO_ID = 'music0'
+    DEVFREQ_MIFINT_PAIRS = [k.split("-") for k in CUSTOM_CROPPING_PARAMS_ALL[SCENARIO_ID].keys()]
+    DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
     
-    
-pprint.pprint(data_list)    
-plot_music_time_per_freq(data_list)
-    
-    
-plt.show()
+    data_list = {} # raw    
+    freq_str_list = []
+    for (mif_freq, int_freq) in DEVFREQ_MIFINT_PAIRS:
+        freq_str = '{0}-{1}'.format(mif_freq, int_freq)
+        req_str = '{0}-{1}'.format(mif_freq, int_freq)
+        freq_str_list.append(freq_str)        
+        data_fname = DATA_DIR + "data_audio-{0}-{1}.txt".format(mif_freq, int_freq)
+         
+        data_list[freq_str] = load_log_music0(data_fname)
+        
+        
+    pprint.pprint(data_list)    
+    plot_music_time_per_freq(data_list)
+        
+        
+    plt.show()
     
     

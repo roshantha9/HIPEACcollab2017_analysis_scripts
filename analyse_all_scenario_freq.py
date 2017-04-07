@@ -250,8 +250,7 @@ def plot_freqstats_per_scenario_per_freq(all_data, sc_list, fmetric, smetric, mi
                     xlbl.append(mifint_freqstr)
                 else:
                     pass
-           
-       
+                  
         #y_norm = _normalise_list_sum(ydata)
         y_norm = ydata 
         xdata = np.arange(1,len(y_norm)+1)
@@ -435,9 +434,9 @@ mifint_freq_list = [
                      "test5-test5",                                          
                      ]
 
-freqdist_alldata =  get_freqstats_per_scenario_per_test(roylongbottom_microbench_list, ['cpu_freq', 'gpu_freq'])
+freqdist_alldata =  get_freqstats_per_scenario_per_test(roylongbottom_microbench_list, ['cpu_freq', 'gpu_freq', 'bus_mif_freq', 'bus_int_freq'])
 #plot_freqdist_per_scenario_per_freq(freqdist_alldata,roylongbottom_microbench_list, 'cpu_freq')
-plot_freqstats_per_scenario_per_freq(freqdist_alldata, roylongbottom_microbench_list, 'cpu_freq', 'sum', mifint_freq_list=mifint_freq_list)
+#plot_freqstats_per_scenario_per_freq(freqdist_alldata, roylongbottom_microbench_list, 'mif_bus_freq', 'sum', mifint_freq_list=mifint_freq_list)
 plot_freqstats_per_scenario_per_freq(freqdist_alldata, roylongbottom_microbench_list, 'cpu_freq', 'transitions', mifint_freq_list=mifint_freq_list)
 #plot_freqstats_per_scenario_per_freq(freqdist_alldata, 'cpu_freq', 'transitions')
 

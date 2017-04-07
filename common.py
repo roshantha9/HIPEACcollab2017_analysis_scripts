@@ -13,22 +13,36 @@ NUM_CPU_CORES=4
 
 # colors based on frequency (MIF/INT)
 DEFAULT_COL_LIST ={                    
-                    "default-default" : 'cyan',
+                    "default-default" : '#999999',
                     "800000-800000" : '#e41a1c',
                     "800000-700000" : '#377eb8',
                     "800000-600000" : '#4daf4a',
                     "800000-400000" : '#ff7f00',
-                    "400000-400000" : '#377eb8',
-                    "200000-200000" : '#4daf4a',                    
-                    "100000-50000" : '#984ea3',
-                    "200000-50000" : '#ff7f00',
-                    "200000-100000" : '#ff7f00',
-                    "400000-50000" : '#ffff33',
-                    "400000-100000" : '#a65628',
+                    "800000-200000" : '#80b1d3',
+                    "400000-400000" : '#984ea3',
                     "400000-200000" : '#a65628',
-                    "800000-200000" : '#984ea3',
+                    "400000-100000" : '#a65628',
+                    "400000-50000" : '#f781bf',                    
+                    "200000-200000" : '#ff7f00',
+                    "200000-100000" : '#ff7f00',
+                    "200000-50000" : '#a65628',                                        
+                    "100000-50000" : '#ffff33',
                     }
 
+
+all_mifint_freqs_macroworkload = [
+                                  "default-default",
+                                  "800000-800000",
+                                  "800000-700000",
+                                  "800000-600000",                                  
+                                  "800000-200000",
+                                  "400000-400000",
+                                  "400000-50000",
+                                  "200000-200000",
+                                  "200000-50000",                                  
+                                  "100000-50000",
+                                  ]
+                                  
 
 scenario_list =[ 
                 # idle or almost idle 
@@ -58,6 +72,46 @@ scenario_list =[
             ]
 
 
+markers_and_cols_per_scenario = {
+                                 
+                                 # idle or almost idle 
+                                "idle0" : ['2', 'blue'], 
+                                "idle1" : ['2', 'saddlebrown'],
+                                
+                                "launcher0" : ['1', "cyan"],
+                                
+                                # multimedia
+                                
+                                
+                                "vlcplayer0" : ['s', "orange"],
+                                
+                                   
+                                "camera0" : ['.', 'blue'],
+                                "camera1" : ['.', 'red'],
+                                
+                                # communication/social media
+                                "line0" : ['*', 'blue'],
+                                "line1" : ['*', 'red'],
+                                "line2" : ['*', 'green'],
+                                
+                                "facebook0" : ['x', 'blue'],
+                                "facebook1" : ['x', 'saddlebrown'],
+                                
+                                # browsing
+                                "chrome0" : ['3', 'green'],
+                                
+                                # download
+                                "ftp0" : ['+', "gold"],
+                                "music0" : ['+', "red"],
+                                "ffmpeg0" : ['+', "deeppink"],
+                                
+                                # browsing
+                                "game0" : ['+', 'k'],
+                                 
+                                 
+                                 } 
+
+
 microbench_list = [                   
                    'spec_bzip2', 'spec_gobmk',
                    'spec_hmmer', 'spec_mcf',
@@ -75,7 +129,7 @@ roylongbottom_microbench_list = [
 
 scenario_list_fps = [
                         # idle or almost idle 
-                        "idle1", "launcher0",
+                        "launcher0",
                         
                         # multimedia                        
                         "vlcplayer0",                        

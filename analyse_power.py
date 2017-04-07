@@ -127,18 +127,19 @@ def adjust_sample_endings(all_sample_lengths):
 
 # prerequisites
 COL_LIST = DEFAULT_COL_LIST
-SCENARIO_ID = "game0" 
+SCENARIO_ID = "idle1" 
 DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
 START_SAMPLE_IX = 0
 END_SAMPLE_IX = -1
 
 CUSTOM_CROPPING_PARAMS = collections.OrderedDict(
                         [                          
-                         ("default-default" , [5000,-10000]),                         
-                         ("800000-800000" , [5000,-10000]),
-                         ("400000-400000" , [5000,-10000]),
-                         ("200000-200000" , [5000,-10000]),
-                         ("400000-50000" , [5000,-10000]),                                        
+                         ("default-default" , [5000,-5000-2924]),                         
+                         ("800000-800000" , [5000,-5000-2879]),
+                         ("400000-400000" , [5000,-5000-990]),
+                         ("200000-200000" , [5000,-5000-2399]),
+                         ("200000-50000" , [5000,-5000-255]),
+                         ("400000-50000" , [5000,-5000-1]),                                        
                           ])                                            
 
 DEVFREQ_MIFINT_PAIRS = [str_2_mifint(k) for k in CUSTOM_CROPPING_PARAMS.keys()]

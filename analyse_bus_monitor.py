@@ -62,7 +62,7 @@ MET_ID_FREQ  = 1
 MET_ID_SAT   = 2
 MET_ID_DUR   = 3
 
-SAMPLING_PERIOD = 200
+SAMPLING_PERIOD = 50
 
 
 def _check_row_extraction(data):
@@ -116,7 +116,7 @@ def load_csv(fname, miffreq, intfreq):
             data["disp1"].append(row[41:45])
             
             # mif, int freqs
-            if miffreq=="default" and intfreq=="default":                              
+            if (miffreq=="default" and intfreq=="default") or (("test" in miffreq) and ("test" in intfreq)) :                              
                 data["mif_freq"].append(int(row[45]))
                 data["int_freq"].append(int(row[46]))
                         
@@ -149,7 +149,7 @@ def get_mem_data_by_metric(metric_id):
 ####################
 # Plotting related
 ####################
-def plot_bus_data(perfdata, met_id, lbl, fname, units, save_fig=False):    
+def plot_bus_data(perfdata, met_id, lbl, fname, units, save_fig=False, show_total=False):    
     print fname
     fig = plt.figure(figsize=(6*1.2, 3.5*1.2))
     ax = fig.add_subplot(111)
@@ -173,7 +173,7 @@ def plot_bus_data(perfdata, met_id, lbl, fname, units, save_fig=False):
         total_data.append(filtered_data[each_metric])
     
     # show overall saturation as well 
-    if met_id == MET_ID_SAT:
+    if (met_id == MET_ID_SAT) and (show_total==True):
         sum_data_per_point = np.sum(total_data, axis=0)
         plt.plot(x_data, sum_data_per_point, color='k', 
                  marker='x', label='Total', lw=1.0)
@@ -196,15 +196,15 @@ def plot_bus_data(perfdata, met_id, lbl, fname, units, save_fig=False):
     
     plt.title(lbl, fontdict=font)
     
-    if(len(str(int(all_max)))>3): # xtick too large, pushes label out
-        plt.subplots_adjust(top=0.85, left=0.115, right=0.98, bottom=0.13)
+    if(len(str(int(all_max)))>=3): # xtick too large, pushes label out
+        plt.subplots_adjust(top=0.85, left=0.115, right=0.98, bottom=0.12)
     else:
-        plt.subplots_adjust(top=0.85, left=0.09, right=0.98, bottom=0.13)
-    
+        plt.subplots_adjust(top=0.85, left=0.075, right=0.99, bottom=0.12)
     
     if save_fig == True:
         fig.savefig(FIG_OUTPUT_DIR_BUSSTATS + fname + ".png")
         fig.savefig(FIG_OUTPUT_DIR_BUSSTATS + fname + ".pdf")
+    
     
 # this is the frequency as set via devfreq
 def plot_mem_freq_data(perfdata, lbl, fname, units, save_fig=False):    
@@ -227,7 +227,7 @@ def plot_mem_freq_data(perfdata, lbl, fname, units, save_fig=False):
     all_max = 0
     
     for ix, each_metric in enumerate(default_freq_metric_order):
-        if (np.max(filtered_data[each_metric] > all_max)):
+        if (np.max(filtered_data[each_metric] > all_max)):            
             all_max = np.max(filtered_data[each_metric])
         
         plt.plot(x_data, filtered_data[each_metric], color=default_colours[each_metric], 
@@ -276,9 +276,18 @@ def _rename_lbl(m):
 #################
 #    MAIN code
 #################
+SAVE_FIG = True
 
-all_sc_list = scenario_list + roylongbottom_microbench_list
+# all 
+all_sc_list = roylongbottom_microbench_list
+#all_sc_list = scenario_list
 all_freq_list = CUSTOM_CROPPING_PARAMS_ALL
+
+# testing
+# all_sc_list = ['rlbench_mprndmemi']
+# all_freq_list = {
+#                  'rlbench_mprndmemi' :['test0-test0'] 
+#                  } 
 
 for each_sc in all_sc_list:
     
@@ -296,20 +305,22 @@ for each_sc in all_sc_list:
         
         (count, perfdata) = load_csv(csv_fname, MIF_FREQ, INT_FREQ)
         
-        plot_bus_data(perfdata, MET_ID_SAT, lbl, fname+"Saturation", "Bus saturation %", save_fig=True)
-        plot_bus_data(perfdata, MET_ID_BW, lbl, fname+"Bandwidth", "Bus bandwidth (MBps)", save_fig=True)
-        plot_bus_data(perfdata, MET_ID_FREQ,lbl, fname+"BusCalcFreq", "Frequency (MHz)" , save_fig=True)
+        plot_bus_data(perfdata, MET_ID_SAT, lbl, fname+"Saturation", "Bus saturation %", save_fig=SAVE_FIG, show_total=False)
+        plot_bus_data(perfdata, MET_ID_BW, lbl, fname+"Bandwidth", "Bus bandwidth (MBps)", save_fig=SAVE_FIG, show_total=False)
+        plot_bus_data(perfdata, MET_ID_FREQ,lbl, fname+"BusCalcFreq", "Frequency (MHz)" , save_fig=SAVE_FIG, show_total=False)
         
         if MIF_FREQ=="default" and INT_FREQ=="default":
-            plot_mem_freq_data(perfdata, lbl, fname+"MIFINTFreq", "Frequency (MHz)", save_fig=True)
+            plot_mem_freq_data(perfdata, lbl, fname+"MIFINTFreq", "Frequency (MHz)", save_fig=SAVE_FIG)
         elif ("test" in MIF_FREQ) and ("test" in INT_FREQ):
-            plot_mem_freq_data(perfdata, lbl, fname+"MIFINTFreq", "Frequency (MHz)", save_fig=True)
+            plot_mem_freq_data(perfdata, lbl, fname+"MIFINTFreq", "Frequency (MHz)", save_fig=SAVE_FIG)
         else:
             pass
         
-        #sys.exit()
-
-#plt.show()
+        
+if SAVE_FIG==False:
+    plt.show()
+else:
+    pass
 
 print "-- Finished --"
 

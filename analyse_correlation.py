@@ -10,6 +10,8 @@ matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
 plt.style.use('/home/rosh/Documents/EngD/Work/VidCodecWork/VideoProfilingData/analysis_tools/bmh_rosh.mplstyle')
 
+import matplotlib.patches as patches
+
 from common import target_metrics_order,reduced_target_metrics_order, reduced_metrics_onlyfreqs_order_2, \
                     reduced_metrics_onlyfreqs_order,reduced_target_metrics_order_2, reduced_target_metrics_order_nogpu, \
                      load_csv, calc_and_update_cpu_util, _normalise_list, \
@@ -115,7 +117,7 @@ def plot_cross_correlation(met1_data, met2_data, norm=True):
     #v = (v - np.mean(v)) /  np.std(v)
     
     c = np.correlate(a, v, 'full')
-    fig = plt.figure(figsize=(8*1.2, 4*1.2))
+    fig = plt.figure(figsize=(10*1.2, 4*1.2))
     fig.canvas.set_window_title("plot_cross_correlation")
     
     print len(c)
@@ -134,10 +136,17 @@ def plot_cpugpumem_dist_all_scenarios(sc_list, mif_freq, int_freq):
              '#006d2c', '#74c476', # greens
              ]
     
-    nrows = 3
-    fig, axs = plt.subplots(nrows,int(np.ceil(len(sc_list)/float(nrows))), figsize=(12*1.2, 10*1.2), sharex=True)    
+    nrows = 2
+    fig, axs = plt.subplots(nrows,int(np.ceil(len(sc_list)/float(nrows))), 
+                            figsize=(12*1.2, 5*1.2), sharex=True)    
     axs = axs.ravel()
-
+    
+    xticklbls = [
+                        'cpu_util', 'cpu_cost', 
+                        'gpu_util', 'gpu_cost',
+                        'mem_util', 'mem_cost'
+                     ]
+    
     for ix, each_scenario in enumerate(sc_list):
         print each_scenario
         DATA_DIR = BASE_DATA_DIR + each_scenario + "/"        
@@ -159,29 +168,72 @@ def plot_cpugpumem_dist_all_scenarios(sc_list, mif_freq, int_freq):
                   mem_util, mem_cost]
         
         pos = np.arange(1, len(y_data)+1)
-        xticklbls = [
-                        'cpu_util', 'cpu_cost', 
-                        'gpu_util', 'gpu_cost',
-                        'mem_util', 'mem_cost'
-                     ]
-        bp = axs[ix].boxplot(y_data, positions=pos, patch_artist=True)
+        
+        bp = axs[ix].boxplot(y_data, positions=pos, patch_artist=True, widths=0.7)
         # change col of boxes
         for box, c in zip(bp['boxes'], colsd):            
             box.set( facecolor =  c) # change fill color
-                    
+             
+            
+            # change outline color
+            box.set( color='#000000', linewidth=1)
+            # change fill color
+            box.set( facecolor =  c)
+            i+=1
         
+        ## change color and linewidth of the whiskers
+        for whisker in bp['whiskers']:
+            whisker.set(color='#000000', linewidth=1, linestyle='-')
+        
+        ## change color and linewidth of the caps
+        for cap in bp['caps']:
+            cap.set(color='#000000', linewidth=1)
+        
+        ## change color and linewidth of the medians
+        for median in bp['medians']:
+            median.set(color='#000000', linewidth=1)
+        
+        ## change the style of fliers and their fill
+        for flier,c in zip(bp['fliers'], colsd):
+            flier.set(marker='x', color=c) 
+                 
         axs[ix].set_xticks(pos)
         ymax =   100.0 if np.max([np.max(m) for m in y_data])<100.0 else np.max([np.max(m) for m in y_data])
                         
         axs[ix].set_ylim([-0.5, ymax])
-        axs[ix].set_title(each_scenario, fontsize=16)
+        axs[ix].set_title(each_scenario, fontsize=13)
+        axs[ix].tick_params(axis='y', labelsize=10)
+        
+        axs[ix].xaxis.grid(False)
+        axs[ix].yaxis.grid(True)
     
-       
-    axs[-1].set_xticklabels(xticklbls, rotation=35, fontsize=14)
-    axs[-2].set_xticklabels(xticklbls, rotation=35, fontsize=14)
-    axs[-3].set_xticklabels(xticklbls, rotation=35, fontsize=14)
+    for ix in np.arange(1, int(len(sc_list)/float(nrows))+1):   
+        #axs[-1*ix].set_xticklabels(xticklbls, rotation=35, fontsize=12)
+        axs[-1*ix].set_xticklabels([])
+        
+    #axs[8].set_ylim([0,150])
     
-    plt.subplots_adjust(top=0.97, left=0.03, right=.99, bottom=0.08)
+    # legend
+    
+    
+    rect_lbl_list = xticklbls
+    cols = colsd
+    rects_list = []
+    for ix, each_rect in enumerate(rect_lbl_list):
+        rec = patches.Rectangle( (0.72, 0.1), 0.2, 0.6, facecolor=cols[ix])
+        rects_list.append(rec)
+    
+    leg = plt.figlegend( rects_list, rect_lbl_list, loc = 'upper center', 
+                         ncol=len(rects_list)/2, labelspacing=0. , fontsize=13,
+                         frameon=False)
+    leg.get_frame().set_facecolor('#FFFFFF')
+    leg.get_frame().set_linewidth(0.0)
+    leg.draggable()
+    
+    
+    
+    plt.subplots_adjust(top=0.88, left=0.025, right=0.995, bottom=0.02, wspace=0.25)
+    
     
 
 
@@ -291,10 +343,10 @@ def _corr_met_ignore_list(m):
 #################
 #    MAIN code
 #################
-SCENARIO_ID = "rlbench_mprndmemi" 
+SCENARIO_ID = "idle1" 
 DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
-MIF_FREQ = "test3"
-INT_FREQ = "test3"
+MIF_FREQ = "default"
+INT_FREQ = "default"
 #MIF_FREQ = 800000
 #INT_FREQ = 800000
 
@@ -315,16 +367,17 @@ lbl = "{0}:mif-{1}:int-{2}".format(SCENARIO_ID, MIF_FREQ, INT_FREQ)
 #corr_matrix = compute_correlation_matrix(perfdata, reduced_target_metrics_order_nogpu)[1]
 #plot_corr_matrix(corr_matrix, reduced_target_metrics_order_nogpu, SCENARIO_ID)
 
-plot_overlapped(perfdata, ['cpu_freq', 
-                           'bus_mif_freq', 'bus_int_freq', 
-                           'cpu_util', 'cpu_cost', 
-                           'sat_total', 'sat_cost'], 
-                SCENARIO_ID)
+# plot_overlapped(perfdata, ['cpu_freq', 
+#                            'bus_mif_freq', 'bus_int_freq', 
+#                            'cpu_util', 'cpu_cost', 
+#                            'sat_total', 'sat_cost'], 
+#                 SCENARIO_ID)
 
 #all_sc_corrs = compute_corrmatrix_all_scenarios(scenario_list, reduced_metrics_onlyfreqs_order_2)
 #plot_corr_across_scenarios(all_sc_corrs)
    
-#plot_cpugpumem_dist_all_scenarios(roylongbottom_microbench_list, "default", "default")
+#plot_cpugpumem_dist_all_scenarios(scenario_list, "default", "default")
+plot_cpugpumem_dist_all_scenarios(roylongbottom_microbench_list, "test0", "test0")
 
 plt.show()
 print "-- Finished --"

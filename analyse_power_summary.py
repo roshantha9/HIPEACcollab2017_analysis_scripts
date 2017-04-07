@@ -4,14 +4,20 @@ import json
 import pprint
 import matplotlib
 import collections
+import operator
 import numpy  as np
 from numpy.dual import norm
 matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
+
 plt.style.use('/home/rosh/Documents/EngD/Work/VidCodecWork/VideoProfilingData/analysis_tools/bmh_rosh.mplstyle')
 
-from common import DEFAULT_COL_LIST
+import matplotlib.patches as patches
+
+from common import DEFAULT_COL_LIST, all_mifint_freqs_macroworkload
 from cropping_params_power import CUSTOM_CROPPING_PARAMS_ALL
+
+
 
 MOV_AVG_WIN_SIZE = 128
 
@@ -88,6 +94,11 @@ def _normalise_list_sum(lst):
     norm = [float(i)/max(lst) for i in lst]
     return norm
 
+def _normalise_list_against_val(lst, v):
+    norm = [float(i)/v for i in lst]
+    return norm
+
+
 #################
 #  Plotting
 #################
@@ -132,7 +143,74 @@ def plot_pow_all_scenarios_all_freqs(all_summary_data, scenario_order):
     plt.subplots_adjust(top=0.98, left=0.03, right=.99, bottom=0.03, hspace=0.37, wspace=0.18)
         
         
+def plot_pow_all_scenarios_all_freqs_stackedbar(all_summary_data, scenario_order):
+    
+    fig, axs = plt.subplots(1,1, figsize=(8*1.2, 4.5*1.2))
+    width = 0.5
+    
+    # remove certain freqs, make simple key/val dict
+    all_ydata = collections.OrderedDict()
+    for ix, each_scenario in enumerate(scenario_order):
+        all_ydata[each_scenario] = collections.OrderedDict()
+        data_per_scenario = all_summary_data[each_scenario]        
+        for each_f, each_v in data_per_scenario.iteritems():
+            if each_f in all_mifint_freqs_macroworkload:
+                all_ydata[each_scenario][each_f] = all_summary_data[each_scenario][each_f]['mean']
+            else:
+                pass # ignore
+    
+    pos = np.arange(0.7,(0.7*len(scenario_order))+0.7,0.7)
+    print pos
+    for ix, each_scenario in enumerate(scenario_order):
+        print each_scenario
+        sorted_all_ydata_tuples = sorted(all_ydata[each_scenario].items(), key=operator.itemgetter(1), reverse=True)
+        ydata = [v[1] for v in sorted_all_ydata_tuples]
         
+        #default_val = all_ydata[each_scenario]['default-default']        
+        #ydata_norm = _normalise_list_against_val(ydata, default_val)
+        
+        ydata_norm = _normalise_list_sum(ydata)
+        
+        freqs = [v[0] for v in sorted_all_ydata_tuples]
+        cols = [DEFAULT_COL_LIST[f] for f in freqs]
+        
+        x_data = [pos[ix]]*len(sorted_all_ydata_tuples)
+        axs.bar(x_data, ydata_norm, width, color=cols)
+    
+    # legend
+    rect_lbl_list = [s.replace("000", "") for s in all_mifint_freqs_macroworkload]
+    cols = [DEFAULT_COL_LIST[f] for f in all_mifint_freqs_macroworkload]
+    rects_list = []
+    for ix, each_rect in enumerate(rect_lbl_list):
+        rec = patches.Rectangle( (0.72, 0.1), 0.2, 0.6, facecolor=cols[ix])
+        rects_list.append(rec)
+    
+    leg = plt.figlegend( rects_list, rect_lbl_list, loc = 'upper center', 
+                         ncol=len(rects_list)/2, labelspacing=0. , fontsize=13,
+                         frameon=False)
+    leg.get_frame().set_facecolor('#FFFFFF')
+    leg.get_frame().set_linewidth(0.0)
+    leg.draggable()
+    
+    
+    xticks = pos
+    yticks = np.arange(0,1+0.1,0.1)
+    axs.set_xticks(xticks + (width/2.))
+    axs.set_xticklabels(scenario_order, fontsize=14, rotation=45)
+    axs.set_xlim(0.7-(width/2.), (0.7*len(scenario_order))+0.7)
+    
+    
+    axs.set_yticks(yticks)
+    axs.set_yticklabels([str(y) for y in yticks], fontsize=14)
+    axs.set_ylabel("Normalised power consumption")
+    
+    plt.gca().xaxis.grid(False)
+    plt.gca().yaxis.grid(True)
+    
+    
+    plt.subplots_adjust(top=0.90, left=0.07, right=.99, bottom=0.17, hspace=0.20, wspace=0.20)
+
+
     
     
     
@@ -177,16 +255,17 @@ def plot_pow_mean_default(all_pow_summary, scenario_order):
     
     scenario_order_sorted = sorted(all_pow_summary, key=lambda k: all_pow_summary[k]['pow_mean_default'])
     
-    y_data = [all_pow_summary[k]['pow_mean_default'] for k in scenario_order_sorted]
-    y_data_normalised = _normalise_list(y_data)
+    y_data = [float(all_pow_summary[k]['pow_mean_default'])/1000.0 for k in scenario_order_sorted]
+    #y_data_normalised = _normalise_list(y_data)
+    y_data_normalised = y_data
     x_data = np.arange(1, len(all_pow_summary.keys())+1)
     rects1 = ax.bar(x_data + width, y_data_normalised, width, color='#084594')
     
     # add some text for labels, title and axes ticks
-    ax.set_ylabel('Normalised mean power consumption')    
-    ax.set_title("Normalised mean power consumption")
+    ax.set_ylabel('Mean power consumption (W)', fontsize=11)    
+    #ax.set_title("Normalised mean power consumption", fontsize=11)
     ax.set_xticks(x_data + width + (width/2.0)) 
-    ax.set_xticklabels(scenario_order_sorted, rotation=15)
+    ax.set_xticklabels(scenario_order_sorted, rotation=45, fontsize=11)
     plt.xlim((1-width+0.4), x_data[-1] + width + (width/2.0) + (1-width+0.4))
         
     plt.subplots_adjust(top=0.95, left=0.06, right=0.99, bottom=0.10)
@@ -339,8 +418,7 @@ SCENARIO_IDS = [
                 "ftp0",
                 
                 # gaming
-                "game0",
-                
+                "game0",                
             ]
 
 ##### Collect and format data #####
@@ -405,10 +483,10 @@ else:
 #pprint.pprint(all_summary_data)
 all_pow_stat_summary = {}
 for each_scenario_id in SCENARIO_IDS:
-    print "--- ", each_scenario_id, " ---"
+    #print "--- ", each_scenario_id, " ---"
     all_pow_stat_summary[each_scenario_id] = summarise_power_stats(all_summary_data, each_scenario_id) 
-    pprint.pprint( all_pow_stat_summary )
-    print ""
+    #pprint.pprint( all_pow_stat_summary )
+    #print ""
     
 
 ##### Plotting #####
@@ -424,11 +502,14 @@ for each_scenario_id in SCENARIO_IDS:
 #                               'Improvement over highest MIF/INT freq setting (800MHz,800MHz) using lower fixed MIF/INT frequencies',
 #                               )
 # 
-plot_pow_mean_default(all_pow_stat_summary, SCENARIO_IDS)
+
+
+#plot_pow_mean_default(all_pow_stat_summary, SCENARIO_IDS)
 
 
 #plot_pow_all_scenarios_all_freqs(all_summary_data, SCENARIO_IDS)
 
+plot_pow_all_scenarios_all_freqs_stackedbar(all_summary_data, SCENARIO_IDS)
 
 plt.show()
         

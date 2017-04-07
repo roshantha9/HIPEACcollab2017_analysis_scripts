@@ -121,29 +121,28 @@ def _non_zero_avg(data):
 #################
 #    MAIN code
 #################
-METRIC = 'ffmpeg_speed'
-
-SCENARIO_ID = "ffmpeg0"
-# get and filter all scenario data for all freqs
-DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
-
-DEVFREQ_MIFINT_PAIRS = [k.split("-") for k in CUSTOM_CROPPING_PARAMS_ALL[SCENARIO_ID].keys()]
-# gather data (csv)
-data_list = [] # raw
-cropped_data_list = collections.OrderedDict()
-freq_str_list = []
-for (mif_freq, int_freq) in DEVFREQ_MIFINT_PAIRS:
-    freq_str = '{0}-{1}'.format(mif_freq, int_freq)
-    req_str = '{0}-{1}'.format(mif_freq, int_freq)
-    freq_str_list.append(freq_str)        
-    data_fname = DATA_DIR + "data_ffmpeg-{0}-{1}.log".format(mif_freq, int_freq)        
-    # get csv data    
-    (count, data) = load_csv(fname_fps=None, fname_ffmpeg=data_fname)
-    # for fps
-    data_list.append(data[METRIC])
-    data_sample_size = len(data[METRIC])    
-    
-    cropped_data_list[freq_str] = data[METRIC]  
+if __name__ == "__main__":
+    METRIC = 'ffmpeg_speed'
+    SCENARIO_ID = "ffmpeg0"
+    # get and filter all scenario data for all freqs
+    DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
+    DEVFREQ_MIFINT_PAIRS = [k.split("-") for k in CUSTOM_CROPPING_PARAMS_ALL[SCENARIO_ID].keys()]
+    # gather data (csv)
+    data_list = [] # raw
+    cropped_data_list = collections.OrderedDict()
+    freq_str_list = []
+    for (mif_freq, int_freq) in DEVFREQ_MIFINT_PAIRS:
+        freq_str = '{0}-{1}'.format(mif_freq, int_freq)
+        req_str = '{0}-{1}'.format(mif_freq, int_freq)
+        freq_str_list.append(freq_str)        
+        data_fname = DATA_DIR + "data_ffmpeg-{0}-{1}.log".format(mif_freq, int_freq)        
+        # get csv data    
+        (count, data) = load_csv(fname_fps=None, fname_ffmpeg=data_fname)
+        # for fps
+        data_list.append(data[METRIC])
+        data_sample_size = len(data[METRIC])    
+        
+        cropped_data_list[freq_str] = data[METRIC]  
     
     
         

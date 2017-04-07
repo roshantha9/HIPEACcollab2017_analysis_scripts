@@ -115,6 +115,9 @@ def plot_avg_metric(all_data, sc_target_fps, metric):
     
     plt.subplots_adjust(top=0.98, left=0.03, right=.99, bottom=0.03, hspace=0.37, wspace=0.18)
     
+
+
+
     
 def _non_zero_avg(data):
     new_data = []

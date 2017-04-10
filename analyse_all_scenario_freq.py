@@ -18,6 +18,7 @@ from common import target_metrics_order,reduced_target_metrics_order, \
                      load_csv, calc_and_update_cpu_util, _normalise_list, \
                      scenario_list, rename_metrics,\
                      roylongbottom_microbench_list,\
+                     rlbench_test_mapping, roylongbottom_microbench_list_renames,\
                      CPU_FREQS_KHZ, GPU_FREQS_MHZ, INT_FREQS_KHZ, MIF_FREQS_KHZ
 
 
@@ -223,7 +224,7 @@ def plot_freqdist_per_scenario_per_freq(all_data,sc_list, metric):
     
     
     
-def plot_freqstats_per_scenario_per_freq(all_data, sc_list, fmetric, smetric, mifint_freq_list=None):
+def OLD_plot_freqstats_per_scenario_per_freq(all_data, sc_list, fmetric, smetric, mifint_freq_list=None):
     fig, axarr = plt.subplots(2,int(np.ceil(len(all_data.keys())/2.0)), figsize=(16, 5))
     fig.canvas.set_window_title('plot_freqstats_per_scenario_per_freq - ' + fmetric + " - " + smetric)
     axs = axarr.ravel()
@@ -263,10 +264,85 @@ def plot_freqstats_per_scenario_per_freq(all_data, sc_list, fmetric, smetric, mi
         
 
 
+
+
+
+def plot_freqstats_per_scenario_per_freq(all_data, sc_list, fmetric, smetric, mifint_freq_list, ylbl):
+    print "plot_freq_time_in_state :: Enter"
+    fig, axarr = plt.subplots(1,1, figsize=(5, 5))
+    fig.canvas.set_window_title('plot_freqstats_per_scenario_per_freq - ' + fmetric + " - " + smetric)
+    
+    fsize=15
+    width = 0.15
+    scatter_colors = plt.get_cmap('Blues')(np.linspace(0, 1.0, len(mifint_freq_list)))
+    cols = [rlbench_test_mapping[f][1] for f in mifint_freq_list]
+    print len(scatter_colors)
+    
+    all_max = 0  
+    for ix, each_scenario in enumerate(sc_list):
+        print each_scenario
+        sc_data = all_data[each_scenario]        
+        ydata = [] 
+        xlbl = []
+        label=each_scenario       
+                
+        for mifint_freqstr in mifint_freq_list:
+            if mifint_freqstr in sc_data: 
+                fdata = sc_data[mifint_freqstr]        
+                ydata.append(fdata[fmetric][smetric])
+                xlbl.append(mifint_freqstr)
+            else:
+                pass    
+        
+        if np.max(ydata) > all_max: 
+            all_max = np.max(ydata)
+        else:
+            pass
+        
+        
+        ind = (ix) + (width * np.arange(0,len(mifint_freq_list)))
+        rect = axarr.bar(ind, ydata, width, color=cols)    
+        
+    # legend
+    rect_lbl_list = [rlbench_test_mapping[f][0] for f in mifint_freq_list]    
+    rects_list = []
+    for ix, each_rect in enumerate(rect_lbl_list):
+        rec = patches.Rectangle( (0.72, 0.1), 0.2, 0.6, facecolor=cols[ix])
+        rects_list.append(rec)
+    
+    leg = plt.figlegend( rects_list, rect_lbl_list, loc = 'upper center', 
+                         ncol=len(rects_list)/2, labelspacing=0. , fontsize=13, handletextpad=0.2,
+                         frameon=False, )
+   
+    leg.get_frame().set_facecolor('#FFFFFF')
+    leg.get_frame().set_linewidth(0.0)
+    leg.draggable()
+    
+    xticks = np.arange(0, len(sc_list)) + (width*(len(mifint_freq_list)/2.))
+    axarr.set_xticks(xticks)
+    sc_lbls = [roylongbottom_microbench_list_renames[s] for s in sc_list]
+    axarr.set_xticklabels(sc_lbls, fontsize=fsize, rotation=15)
+    axarr.set_xlim([-1*width, (len(sc_list))])
+    axarr.set_ylim([0, all_max*1.01])
+    axarr.set_ylabel(ylbl, fontsize=fsize)
+    axarr.tick_params(axis='y', which='major', labelsize=fsize)
+    
+    plt.gca().xaxis.grid(False)
+    plt.gca().yaxis.grid(True)
+    
+    plt.subplots_adjust(top=0.88, left=0.14, right=.99, bottom=0.12, hspace=0.20, wspace=0.20)
+    
+
+
+
+
 def plot_freq_time_in_state(sc_list, metric, TMP_MIF_FREQ = "default", TMP_INT_FREQ = "default"):
+    
     f, axarr = plt.subplots(2,8, sharex=True, sharey=True, figsize=(16, 10))
     f.canvas.set_window_title('plot_time_in_state -'+metric)
     axarr = axarr.ravel()
+    
+    
     
     # get colors and freq list
     (freq_list, colsd) = get_allfreq_list(metric)
@@ -424,20 +500,22 @@ def _counter_mode(lst):
 
 #plot_freq_time_in_state(scenario_list, 'gpu_freq', TMP_MIF_FREQ='400000', TMP_INT_FREQ='400000')
 
-mifint_freq_list = [
-                     "default-default",                         
-                     "test0-test0",
-                     "test1-test1",
+mifint_freq_list = [ 
+                     "default-default",                      
+                     #"test0-test0",                             
                      "test2-test2",
                      "test3-test3",
+                     "test1-test1",
                      "test4-test4",
-                     "test5-test5",                                          
+                     "test5-test5",                                            
                      ]
+
 
 freqdist_alldata =  get_freqstats_per_scenario_per_test(roylongbottom_microbench_list, ['cpu_freq', 'gpu_freq', 'bus_mif_freq', 'bus_int_freq'])
 #plot_freqdist_per_scenario_per_freq(freqdist_alldata,roylongbottom_microbench_list, 'cpu_freq')
 #plot_freqstats_per_scenario_per_freq(freqdist_alldata, roylongbottom_microbench_list, 'mif_bus_freq', 'sum', mifint_freq_list=mifint_freq_list)
-plot_freqstats_per_scenario_per_freq(freqdist_alldata, roylongbottom_microbench_list, 'cpu_freq', 'transitions', mifint_freq_list=mifint_freq_list)
+plot_freqstats_per_scenario_per_freq(freqdist_alldata, roylongbottom_microbench_list, 'cpu_freq', 'transitions', mifint_freq_list, '# of CPU-freq transitions')
+#plot_freqstats_per_scenario_per_freq(freqdist_alldata, roylongbottom_microbench_list, 'cpu_freq', 'sum', mifint_freq_list, 'Total CPU-freq (Hz)')
 #plot_freqstats_per_scenario_per_freq(freqdist_alldata, 'cpu_freq', 'transitions')
 
 #get_metric_slope_analysis(scenario_list)

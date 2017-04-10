@@ -7,16 +7,24 @@ matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm 
 
+from common import scenario_list, roylongbottom_microbench_list, mif_int_freqstr_to_tuple, rlbench_test_mapping
+                    
+from cropping_params_power import CUSTOM_CROPPING_PARAMS_ALL
+
 #import seaborn.apionly as sns
 plt.style.use('/home/rosh/Documents/EngD/Work/VidCodecWork/VideoProfilingData/analysis_tools/bmh_rosh.mplstyle')
 
 
 BASE_DATA_DIR = "/home/rosh/Documents/NTU_Work/HiPEAC_collab/DataCapture/SystemPerfStats/060317/"
 
-
+FIG_OUTPUT_DIR_CPUSTATS = "/home/rosh/Documents/NTU_Work/HiPEAC_collab/plots/DetailedPlots/cpugpu_stats/"
+FIG_OUTPUT_DIR_CPUFREQ = "/home/rosh/Documents/NTU_Work/HiPEAC_collab/plots/DetailedPlots/cpugpu_freq/"
 
 SAMPLING_PERIOD = 50
 NUM_CPU_CORES = 4
+PLOT_UTIL_PER_CORE = True
+
+
 
 default_metric_order = [
                         "util",
@@ -215,8 +223,9 @@ def calc_and_update_cpu_util(data):
 ####################
 # Plotting related
 ####################
-PLOT_UTIL_PER_CORE = True
-def plot_util_data(perfdata, fname, lbl):    
+
+def plot_util_data(perfdata, fname, lbl, save_fig=False):    
+    print lbl
     fig = plt.figure(figsize=(8*1.2, 4*1.2))
     fig.canvas.set_window_title(fname)
     
@@ -252,7 +261,7 @@ def plot_util_data(perfdata, fname, lbl):
                     alpha=0.5, linewidth=2.0)
         
         
-    l = plt.legend(ncol=6, fontsize=11, 
+    l = plt.legend(ncol=6, fontsize=11,  frameon=False,
                    labelspacing=0, handletextpad=0.2, loc='upper center',
                    bbox_to_anchor=(0.5, 1.17))
     l.draggable()
@@ -271,10 +280,16 @@ def plot_util_data(perfdata, fname, lbl):
     plt.title(lbl, fontdict=font)
     
     plt.subplots_adjust(top=0.87, left=0.07, right=0.98, bottom=0.112)
+    
+    
+    if save_fig == True:
+        fig.savefig(FIG_OUTPUT_DIR_CPUSTATS + fname + "CPUGPUUtil.png")
+        fig.savefig(FIG_OUTPUT_DIR_CPUSTATS + fname + "CPUGPUUtil.pdf")
+    
+    
 
 
-
-def plot_freq_data(perfdata, fname, lbl):    
+def plot_freq_data(perfdata, fname, lbl, save_fig=False):    
     fig = plt.figure(figsize=(8*1.2, 4*1.2))
     fig.canvas.set_window_title(fname)
     
@@ -297,7 +312,7 @@ def plot_freq_data(perfdata, fname, lbl):
     plt.axhline(y=np.mean(gpu_freq), color=default_colours["gpu_freq"], linestyle='--', alpha=0.5, lw=2.0)
     
     # legend
-    l = plt.legend(ncol=6, fontsize=11, 
+    l = plt.legend(ncol=6, fontsize=11, frameon=False,
                    labelspacing=0, handletextpad=0.2, loc='upper center',
                    bbox_to_anchor=(0.5, 1.17))
     l.draggable()
@@ -315,32 +330,53 @@ def plot_freq_data(perfdata, fname, lbl):
     plt.title(lbl, fontdict=font)
     
     plt.subplots_adjust(top=0.87, left=0.07, right=0.98, bottom=0.112)
+    
+    if save_fig == True:
+        fig.savefig(FIG_OUTPUT_DIR_CPUFREQ + fname + "CPUGPUFreq.png")
+        fig.savefig(FIG_OUTPUT_DIR_CPUFREQ + fname + "CPUGPUFreq.pdf")
+    
 
 #################
 #    MAIN code
 #################
+SAVE_FIG = True
 
-SCENARIO_ID = "llrand" 
-DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
-MIF_FREQ = "default"
-INT_FREQ = "default"
-#MIF_FREQ = 100000
-#INT_FREQ = 50000
+# all 
+#all_sc_list = scenario_list
+all_sc_list = roylongbottom_microbench_list
+all_freq_list = CUSTOM_CROPPING_PARAMS_ALL
 
-csv_fname = DATA_DIR + "data_cpugpu-{0}-{1}.csv".format(MIF_FREQ, INT_FREQ)
+for each_sc in all_sc_list:
 
+    SCENARIO_ID = each_sc
+    DATA_DIR = BASE_DATA_DIR + SCENARIO_ID + "/"
+    
+    for each_mifint_freq in all_freq_list[each_sc]:
+    
+        [MIF_FREQ, INT_FREQ] = mif_int_freqstr_to_tuple(each_mifint_freq)
+        
+        csv_fname = DATA_DIR + "data_cpugpu-{0}-{1}.csv".format(MIF_FREQ, INT_FREQ)
+        
+        (count, perfdata) = load_csv(csv_fname)
+        perfdata = calc_and_update_cpu_util(perfdata)
+        
+        
+        if "rlbenc" in each_sc:
+            TESTID = rlbench_test_mapping[each_mifint_freq][0]
+            lbl = "{0}--Test:{1}".format(SCENARIO_ID, TESTID)
+        else:
+            lbl = "{0}--MIF-{1}:INT-{2}".format(SCENARIO_ID, MIF_FREQ, INT_FREQ)
+        
+        fname="plot_cpugpu-{0}-".format(lbl)
+        
+        plot_util_data(perfdata, fname, lbl, save_fig=SAVE_FIG)
+        plot_freq_data(perfdata, fname, lbl, save_fig=SAVE_FIG)
+        
 
-(count, perfdata) = load_csv(csv_fname)
-perfdata = calc_and_update_cpu_util(perfdata)
-
-lbl = "{0}:mif-{1}:int-{2}".format(SCENARIO_ID, MIF_FREQ, INT_FREQ)
-fname="plot_cpugpu-{0}-".format(lbl)
-
-plot_util_data(perfdata, fname, lbl)
-plot_freq_data(perfdata, fname, lbl)
-
-plt.show()
-
+if SAVE_FIG==False:
+    plt.show()
+else:
+    pass
 print "-- Finished --"
 
 

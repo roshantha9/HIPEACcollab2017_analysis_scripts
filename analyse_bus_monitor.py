@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 plt.style.use('/home/rosh/Documents/EngD/Work/VidCodecWork/VideoProfilingData/analysis_tools/bmh_rosh.mplstyle')
 
 
-from common import scenario_list, roylongbottom_microbench_list, mif_int_freqstr_to_tuple
+from common import scenario_list, roylongbottom_microbench_list, mif_int_freqstr_to_tuple, rlbench_test_mapping
 
                     
 from cropping_params_power import CUSTOM_CROPPING_PARAMS_ALL
@@ -298,12 +298,20 @@ for each_sc in all_sc_list:
         
         [MIF_FREQ, INT_FREQ] = mif_int_freqstr_to_tuple(each_mifint_freq)
         
-        lbl = "{0}--MIF-{1}:INT-{2}".format(SCENARIO_ID, MIF_FREQ, INT_FREQ)
-        fname="plot_bus-{0}-".format(lbl)
         
         csv_fname = DATA_DIR + "data_mem-{0}-{1}.csv".format(MIF_FREQ, INT_FREQ)
         
         (count, perfdata) = load_csv(csv_fname, MIF_FREQ, INT_FREQ)
+        
+        
+        if "rlbenc" in each_sc:
+            TESTID = rlbench_test_mapping[each_mifint_freq][0]
+            lbl = "{0}--Test:{1}".format(SCENARIO_ID, TESTID)
+        else:
+            lbl = "{0}--MIF-{1}:INT-{2}".format(SCENARIO_ID, MIF_FREQ, INT_FREQ)
+        
+        fname="plot_bus-{0}-".format(lbl)
+        
         
         plot_bus_data(perfdata, MET_ID_SAT, lbl, fname+"Saturation", "Bus saturation %", save_fig=SAVE_FIG, show_total=False)
         plot_bus_data(perfdata, MET_ID_BW, lbl, fname+"Bandwidth", "Bus bandwidth (MBps)", save_fig=SAVE_FIG, show_total=False)

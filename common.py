@@ -13,20 +13,20 @@ NUM_CPU_CORES=4
 
 # colors based on frequency (MIF/INT)
 DEFAULT_COL_LIST ={                    
-                    "default-default" : '#999999',
-                    "800000-800000" : '#e41a1c',
-                    "800000-700000" : '#377eb8',
-                    "800000-600000" : '#4daf4a',
-                    "800000-400000" : '#ff7f00',
-                    "800000-200000" : '#80b1d3',
-                    "400000-400000" : '#984ea3',
-                    "400000-200000" : '#a65628',
-                    "400000-100000" : '#a65628',
-                    "400000-50000" : '#f781bf',                    
-                    "200000-200000" : '#ff7f00',
-                    "200000-100000" : '#ff7f00',
-                    "200000-50000" : '#a65628',                                        
-                    "100000-50000" : '#ffff33',
+                    "default-default" : '#636363',
+                    "800000-800000" : '#a50f15',
+                    "800000-700000" : '#de2d26',
+                    "800000-600000" : '#fb6a4a',
+                    "800000-400000" : '#fcae91',
+                    "800000-200000" : '#fee5d9',
+                    "400000-400000" : '#2171b5',
+                    "400000-200000" : '#6baed6',
+                    "400000-100000" : '#eff3ff',
+                    "400000-50000" : '#bdd7e7',                    
+                    "200000-200000" : '#31a354',
+                    "200000-100000" : '#e5f5e0',
+                    "200000-50000" : '#a1d99b',                                        
+                    "100000-50000" : '#feb24c',
                     }
 
 
@@ -43,6 +43,21 @@ all_mifint_freqs_macroworkload = [
                                   "100000-50000",
                                   ]
                                   
+
+rlbench_test_mapping = {
+                             # code: [lbl, col, mifintstr]
+                             
+                             "default-default": ["default", 'darkgray', "default-default"],                      
+                             "test0-test0": ["fixedAll", 'green', "400-160"],                             
+                             "test2-test2": ["400-160", 'royalblue', "400-160"],
+                             "test3-test3": ["800-800", 'skyblue', "800-800"],
+                             "test1-test1": ["randMIF", '#fcae91', "RND-160"],
+                             "test4-test4": ["randINT", '#fb6a4a', "800-RND"],
+                             "test5-test5": ["randMem", '#cb181d', "RND-RND"],  
+                             
+                             }
+
+
 
 scenario_list =[ 
                 # idle or almost idle 
@@ -103,7 +118,7 @@ markers_and_cols_per_scenario = {
                                 # download
                                 "ftp0" : ['+', "gold"],
                                 "music0" : ['+', "red"],
-                                "ffmpeg0" : ['+', "deeppink"],
+                                "ffmpeg0" : ['+', "lime"],
                                 
                                 # browsing
                                 "game0" : ['+', 'k'],
@@ -125,6 +140,15 @@ roylongbottom_microbench_list = [
                                  'rlbench_mpdhryi',
                                  'rlbench_mpmflops2i',                                 
                                  ]
+
+
+roylongbottom_microbench_list_renames = {
+                                 'rlbench_mprndmemi' : 'mprndmemi',
+                                 'rlbench_mpbusspd2' : 'mpbusspd2',
+                                 'rlbench_mpdhryi' : 'mpdhryi',
+                                 'rlbench_mpmflops2i' : 'mpmflops2i',                                
+                                 }
+
 
 
 scenario_list_fps = [

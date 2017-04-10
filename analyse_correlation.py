@@ -125,25 +125,25 @@ def plot_cross_correlation(met1_data, met2_data, norm=True):
     plt.plot(c)
 
 
-def plot_cpugpumem_dist_all_scenarios(sc_list, mif_freq, int_freq):
+def plot_cpugpumem_dist_all_scenarios(sc_list, mif_freq, int_freq, nrows = 2):
     cmap = plt.get_cmap('rainbow')
     colsd = [cmap(i) for i in np.linspace(0, 1, 6)]
     
     
     colsd = [
              '#08519c', '#6baed6', # blues
-             '#a50f15', '#fb6a4a', # reds
+             #'#a50f15', '#fb6a4a', # reds
              '#006d2c', '#74c476', # greens
              ]
     
-    nrows = 2
+    nrows = nrows
     fig, axs = plt.subplots(nrows,int(np.ceil(len(sc_list)/float(nrows))), 
-                            figsize=(12*1.2, 5*1.2), sharex=True)    
+                            figsize=(12*1.2, 5*1.2), sharex=True, sharey=True)    
     axs = axs.ravel()
     
     xticklbls = [
                         'cpu_util', 'cpu_cost', 
-                        'gpu_util', 'gpu_cost',
+                        #'gpu_util', 'gpu_cost',
                         'mem_util', 'mem_cost'
                      ]
     
@@ -164,7 +164,7 @@ def plot_cpugpumem_dist_all_scenarios(sc_list, mif_freq, int_freq):
         
                     
         y_data = [cpu_util, cpu_cost, 
-                  gpu_util, gpu_cost,
+                  #gpu_util, gpu_cost,
                   mem_util, mem_cost]
         
         pos = np.arange(1, len(y_data)+1)
@@ -201,8 +201,8 @@ def plot_cpugpumem_dist_all_scenarios(sc_list, mif_freq, int_freq):
         ymax =   100.0 if np.max([np.max(m) for m in y_data])<100.0 else np.max([np.max(m) for m in y_data])
                         
         axs[ix].set_ylim([-0.5, ymax])
-        axs[ix].set_title(each_scenario, fontsize=13)
-        axs[ix].tick_params(axis='y', labelsize=10)
+        axs[ix].set_title(each_scenario, fontsize=14)
+        axs[ix].tick_params(axis='y', labelsize=14)
         
         axs[ix].xaxis.grid(False)
         axs[ix].yaxis.grid(True)
@@ -224,7 +224,7 @@ def plot_cpugpumem_dist_all_scenarios(sc_list, mif_freq, int_freq):
         rects_list.append(rec)
     
     leg = plt.figlegend( rects_list, rect_lbl_list, loc = 'upper center', 
-                         ncol=len(rects_list)/2, labelspacing=0. , fontsize=13,
+                         ncol=len(rects_list)/2, labelspacing=0. , fontsize=14,
                          frameon=False)
     leg.get_frame().set_facecolor('#FFFFFF')
     leg.get_frame().set_linewidth(0.0)
@@ -377,7 +377,7 @@ lbl = "{0}:mif-{1}:int-{2}".format(SCENARIO_ID, MIF_FREQ, INT_FREQ)
 #plot_corr_across_scenarios(all_sc_corrs)
    
 #plot_cpugpumem_dist_all_scenarios(scenario_list, "default", "default")
-plot_cpugpumem_dist_all_scenarios(roylongbottom_microbench_list, "test0", "test0")
+plot_cpugpumem_dist_all_scenarios(roylongbottom_microbench_list, "test0", "test0", nrows=1)
 
 plt.show()
 print "-- Finished --"
